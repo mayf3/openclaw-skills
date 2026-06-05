@@ -1,3 +1,10 @@
+---
+name: shopping-list
+description: Persistent shopping list management for AI agents. Supports add/edit/delete items,
+  budget tracking, category/store organization, and history. Use when tracking shopping needs,
+  managing grocery lists, or organizing purchases by store/priority.
+---
+
 # 购物清单管理技能
 
 ## 技能说明

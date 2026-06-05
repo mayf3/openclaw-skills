@@ -16,7 +16,7 @@
 set -euo pipefail
 
 # ── 配置 ─────────────────────────────────────────────────────────────────────
-BRAVE_AGENT_DIR="${{SKILL_DIR}}/../brave-browser-agent"
+BRAVE_AGENT_DIR="${BRAVE_AGENT_DIR:-$(dirname "$0")/../brave-browser-agent}"
 CDP_SCRIPT="$BRAVE_AGENT_DIR/scripts/cdp_exec.py"
 WAIT_SECONDS=5
 MAX_CHARS=8000

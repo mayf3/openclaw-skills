@@ -48,7 +48,7 @@ def cdp_eval_http(tab_id: str, expr: str, port: int = 9222, await_promise: bool 
     """Evaluate JS via CDP using the shared brave-browser-agent cdp_exec.py."""
     import subprocess
     # Use the shared brave-browser-agent's cdp_exec.py (port 9222)
-    brave_agent_dir = os.path.expanduser("~/.openclaw/skills/brave-browser-agent/scripts")
+    brave_agent_dir = os.path.expanduser("brave-browser-agent/scripts")
     cdp_script = os.path.join(brave_agent_dir, "cdp_exec.py")
     cmd = [
         sys.executable,

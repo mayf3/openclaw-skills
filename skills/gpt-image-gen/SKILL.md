@@ -31,8 +31,8 @@ Generate images via ChatGPT's GPT-Image-2 model by automating the shared Brave B
 ## Shared Scripts
 
 复用 `brave-browser-agent` 的 CDP 脚本（端口 9222）：
-- **CDP 操作**: `~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py`
-- **浏览器状态检查**: `~/.openclaw/skills/brave-browser-agent/scripts/check_brave.py`
+- **CDP 操作**: `brave-browser-agent/scripts/cdp_exec.py`
+- **浏览器状态检查**: `brave-browser-agent/scripts/check_brave.py`
 
 本技能自带 ChatGPT 专用脚本：
 - **图片提取**: `{{SKILL_DIR}}/scripts/extract_image.py`
@@ -42,7 +42,7 @@ Generate images via ChatGPT's GPT-Image-2 model by automating the shared Brave B
 ### Step 1: Check Browser Status
 
 ```bash
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/check_brave.py
+python3 brave-browser-agent/scripts/check_brave.py
 ```
 
 **如果 9222 无响应**，告诉用户：
@@ -72,7 +72,7 @@ tab_id = asyncio.run(create_tab())
 或者复用已有的 ChatGPT 标签：
 
 ```bash
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py list
+python3 brave-browser-agent/scripts/cdp_exec.py list
 # 找到 chatgpt.com 的 tab，记下 TAB_ID
 ```
 
@@ -82,7 +82,7 @@ python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py list
 
 ```bash
 sleep 3
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py screenshot $CHATGPT_TAB /tmp/chatgpt-state.png
+python3 brave-browser-agent/scripts/cdp_exec.py screenshot $CHATGPT_TAB /tmp/chatgpt-state.png
 ```
 
 确认页面加载完成（看到输入框）。
@@ -92,7 +92,7 @@ python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py screenshot $C
 ChatGPT 使用 `<div id="prompt-textarea" contenteditable="true">` 作为输入框。
 
 ```bash
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT_TAB '
+python3 brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT_TAB '
 (function() {
     var el = document.querySelector("#prompt-textarea");
     if (!el) return "NO_EDITOR";
@@ -109,7 +109,7 @@ python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT
 ### Step 5: Click Send
 
 ```bash
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT_TAB '
+python3 brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT_TAB '
 (function() {
     var btn = document.querySelector("button[data-testid=\"send-button\"]");
     if (btn) { btn.click(); return "CLICKED_SEND"; }
@@ -125,12 +125,12 @@ GPT-Image-2 生成通常需要 **15-40 秒**。用截图轮询：
 ```bash
 # 等待 20 秒
 sleep 20
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py screenshot $CHATGPT_TAB /tmp/chatgpt-result.png
+python3 brave-browser-agent/scripts/cdp_exec.py screenshot $CHATGPT_TAB /tmp/chatgpt-result.png
 ```
 
 检查是否还在生成中：
 ```bash
-python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT_TAB '
+python3 brave-browser-agent/scripts/cdp_exec.py eval $CHATGPT_TAB '
 (function() {
     var imgs = document.querySelectorAll("img");
     var count = 0;

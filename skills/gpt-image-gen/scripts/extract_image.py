@@ -25,7 +25,7 @@ CDP_HOST = "127.0.0.1"
 
 def cdp_eval(tab_id: str, expr: str, port: int = 9222, await_promise: bool = False) -> str:
     """Evaluate JS via CDP using the shared brave-browser-agent cdp_exec.py."""
-    brave_dir = os.path.expanduser("~/.openclaw/skills/brave-browser-agent/scripts")
+    brave_dir = os.path.expanduser("brave-browser-agent/scripts")
     cdp_script = os.path.join(brave_dir, "cdp_exec.py")
     cmd = [sys.executable, cdp_script, "--port", str(port),
            "eval", tab_id, expr]

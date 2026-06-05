@@ -1,0 +1,13 @@
+# Deep Research Skill Dependencies
+#
+# Core: Python 3.9+ standard library only. No pip install needed for DDGS backend.
+#
+# Browser backends (ChatGPT/Gemini):
+#   websockets — WebSocket client for CDP communication
+#     pip install websockets
+#
+# PDF generation (optional, for HTML reports):
+#   weasyprint — HTML to PDF
+#     pip install weasyprint
+#
+# Smart-search skill provides ddgs_search.py (no separate pip needed).

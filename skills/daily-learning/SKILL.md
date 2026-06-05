@@ -2,7 +2,7 @@
 name: daily-learning
 description: >
   Standardized daily learning framework for AI agents. Unified workflow: study a topic →
-  write notes to local workspace → ingest to shared wiki. Use when: (1) setting up daily
+  write notes to local workspace → ingest to shared knowledge base (optional). Use when: (1) setting up daily
   cron learning tasks, (2) an agent needs the standard learning protocol, (3) consolidating
   learning output to wiki. Triggers on "定时学习", "daily learning", "学习任务",
   "learning cron", "学习流程". NOT for: one-off Q&A, immediate task execution,
@@ -11,13 +11,13 @@ description: >
 
 # Daily Learning — Agent 统一学习框架
 
-所有 agent 遵循相同的学习流程，笔记结构统一，知识沉淀到共享 wiki。
+所有 agent 遵循相同的学习流程，笔记结构统一，知识沉淀到共享知识库（可选）。
 
 ## 学习流程
 
 ### Step 0: 当日素材投递（先于学习）
 
-在开始每日学习之前，检查**今天**的探索产出是否需要投递到 wiki inbox。
+在开始每日学习之前，检查**今天**的探索产出是否需要投递到 knowledge base inbox (optional)。
 
 **检查范围**（只看当天）：
 - `<workspace>/candidates/daily/YYYY-MM-DD.md`（今天的探索素材）
@@ -28,12 +28,12 @@ description: >
 投递条件（必须全部满足）：
 1. 有实质内容（有分析、数据、案例，不只是链接/标题）
 2. 有学习价值（其他人看了能学到东西）
-3. 非已有词条重复（对照 wiki/index.md）
+3. 非已有词条重复（对照 knowledge base index）
 
 **投递方法**：
 
 ```bash
-cat > <your-wiki-inbox-path>/YYYY-MM-DD_<topic>_<agent-id>.md << 'EOF'
+cat > <your-knowledge-base-path>/YYYY-MM-DD_<topic>_<agent-id>.md << 'EOF'
 ---
 title: <descriptive title>
 source_type: exploration | report | note
@@ -154,7 +154,7 @@ EOF
 用 `llm-wiki-knowledge` skill 提交到共享 wiki：
 
 ```bash
-cat > <your-wiki-inbox-path>/YYYY-MM-DD_<topic>_<agent-id>.md << 'EOF'
+cat > <your-knowledge-base-path>/YYYY-MM-DD_<topic>_<agent-id>.md << 'EOF'
 ---
 title: <descriptive title>
 source_type: note
@@ -171,7 +171,7 @@ EOF
 ### Step 7: 验证全部产出（必须）
 
 ```bash
-bash <skill-dir>/scripts/verify-daily-learning.sh YYYY-MM-DD <agent-id> <workspace> <your-wiki-inbox-path>
+bash <skill-dir>/scripts/verify-daily-learning.sh YYYY-MM-DD <agent-id> <workspace> <your-knowledge-base-path>
 ```
 
 检查：本地笔记存在、Wiki 双写存在、进度已更新。`✅ 3/3` 通过才能继续；有 `❌` 必须先补全。
@@ -205,13 +205,13 @@ bash <skill-dir>/scripts/verify-daily-learning.sh YYYY-MM-DD <agent-id> <workspa
 执行每日学习任务。
 
 遵循 daily-learning skill 标准流程：
-0. 扫描 candidates/ 和 reports/ 目录，筛选高质量素材投递到 wiki inbox（<your-wiki-inbox-path>/）
+0. 扫描 candidates/ 和 reports/ 目录，筛选高质量素材投递到 knowledge base inbox (optional)（<your-knowledge-base-path>/）
 1. 读取 learning/LEARNING.md 查看进度
 2. 深入学习下一个主题（<指定学习方向>）
 3. 写笔记到 learning/notes/YYYY-MM-DD.md
 4. 更新 LEARNING.md 进度
 5. 检查剩余未学主题，如果不足 3 个则自动搜索最新动态扩充学习计划
-6. 双写到 wiki（<your-wiki-inbox-path>/）
+6. 双写到 wiki（<your-knowledge-base-path>/）
 
 学习方向：<agent 的具体学习领域>
 安静学习，不推群。

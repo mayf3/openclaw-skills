@@ -1,0 +1,177 @@
+---
+name: gemini-image-gen
+description: |
+  Generate images using Google Gemini's free Imagen model via browser automation (CDP).
+  Shares the user's daily Brave Browser (port 9222) via the brave-browser-agent skill.
+  Navigate to gemini.google.com, enable "制作图片" mode, submit prompts, and extract generated images.
+
+  Use when:
+  (1) User asks to generate/create/draw an image or picture
+  (2) User asks for AI art, illustrations, concept art, or visual content
+  (3) User mentions "画图", "生成图片", "AI绘图", "image generation"
+  (4) User wants to use Gemini/Imagen for image creation
+  (5) Need a free, no-API-key image generation option
+
+  Requires: Brave Browser running with --remote-debugging-port=9222, Google account logged in at gemini.google.com, Python 3, websockets pip package.
+---
+
+# Gemini Image Generation
+
+Generate images via Google Gemini (Imagen) by automating the shared Brave Browser through CDP.
+
+> **本技能共享用户日常 Brave 浏览器（端口 9222），与 brave-browser-agent 使用同一个浏览器实例。**
+> **绝不启动/重启/关闭浏览器，只 attach。**
+
+## Prerequisites
+
+- Brave Browser running on port **9222** (shared with brave-browser-agent)
+- Google account logged in at gemini.google.com
+- Python 3 + websockets pip package
+
+## Shared Scripts
+
+本技能复用 `brave-browser-agent` 的 CDP 脚本（端口 9222）：
+- **CDP 操作**: `~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py`
+- **浏览器状态检查**: `~/.openclaw/skills/brave-browser-agent/scripts/check_brave.py`
+
+本技能自带 Gemini 专用脚本：
+- **图片提取**: `{{SKILL_DIR}}/scripts/extract_image.py`
+
+> ⚠️ 不再使用 `start_brave.py` 或独立的 18800 端口浏览器。
+
+## Workflow
+
+### Step 1: Check Browser Status
+
+```bash
+python3 ~/.openclaw/skills/brave-browser-agent/scripts/check_brave.py
+```
+
+**如果 9222 无响应**，告诉用户：
+> "Brave Browser 未启动远程调试，请关闭所有 Brave 窗口后用以下命令重新打开：
+> `/Applications/Brave\ Browser.app/Contents/MacOS/Brave\ Browser --remote-debugging-port=9222`"
+
+Verify: `curl -s http://localhost:9222/json/version`
+
+### Step 2: Open Gemini
+
+```bash
+python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py open "https://gemini.google.com/"
+```
+
+Get the tab ID:
+```bash
+python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py list
+```
+
+Save the Gemini tab ID as `GEMINI_TAB` for subsequent steps.
+
+### Step 3: Enable "制作图片" Mode (CRITICAL)
+
+⚠️ **This step is mandatory.** Without it Gemini only returns text, never images.
+
+1. Take a screenshot to see current page state:
+```bash
+python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py screenshot $GEMINI_TAB /tmp/gemini-state.png
+```
+
+2. Click the "工具" (Tools) button in the input area. Use JS to find and click it:
+```javascript
+// Look for the "工具" button near the input area
+document.querySelector('[aria-label="工具"]')?.click()
+  || document.querySelector('button[aria-label="Tools"]')?.click()
+  || Array.from(document.querySelectorAll('button, [role="button"]')).find(b => b.textContent.includes('工具'))?.click()
+```
+
+3. Wait briefly, then click "制作图片" in the popup menu:
+```javascript
+// Click "制作图片" menu item
+Array.from(document.querySelectorAll('[role="menuitem"], [role="option"], button, div'))
+  .find(e => e.textContent.includes('制作图片') || e.textContent.includes('Create image'))?.click()
+```
+
+4. Verify by screenshot — page should show style options (单色, 电影效果, 油画, etc.).
+
+**If a specific style is requested by the user**, click the corresponding style chip before proceeding.
+
+### Step 4: Input Prompt and Submit
+
+```javascript
+// Set prompt text in the contenteditable input
+var editor = document.querySelector('[contenteditable="true"][role="textbox"]');
+if (!editor) { editor = document.querySelector('.ql-editor[contenteditable="true"]'); }
+editor.focus();
+editor.textContent = 'YOUR_PROMPT_HERE';
+editor.dispatchEvent(new Event('input', {bubbles: true}));
+```
+
+Enhance the prompt if needed — add style keywords, quality modifiers, composition details. See Prompt Tips below.
+
+Then click send:
+```javascript
+document.querySelector('button[aria-label="发送"], button[aria-label="Send message"]')?.click()
+  || document.querySelector('button[aria-label="发送"]')?.click()
+```
+
+### Step 5: Wait for Generation
+
+Gemini takes 10–30 seconds to generate. Poll with screenshots:
+
+```bash
+# Wait 15s then check
+sleep 15
+python3 ~/.openclaw/skills/brave-browser-agent/scripts/cdp_exec.py screenshot $GEMINI_TAB /tmp/gemini-result.png
+```
+
+If the image is not yet visible, wait another 10s and retry. Look for blob: images:
+```javascript
+// Check if image is present
+Array.from(document.querySelectorAll('img')).filter(i => i.src.startsWith('blob:') && i.naturalWidth > 100).length
+```
+
+### Step 6: Extract Image
+
+Use the Gemini-specific extraction script:
+```bash
+python3 {{SKILL_DIR}}/scripts/extract_image.py $GEMINI_TAB /tmp/openclaw/gemini-output.png
+```
+
+Ensure `/tmp/openclaw/` exists:
+```bash
+mkdir -p /tmp/openclaw
+```
+
+### Step 7: Send to User
+
+```bash
+openclaw message send \
+  --channel feishu \
+  --target <chat_id> \
+  --media /tmp/openclaw/gemini-output.png \
+  --message " Generated by Gemini Imagen"
+```
+
+Allowed media directories: `/tmp/openclaw`, `~/.openclaw/media`, `~/.openclaw/agents`
+
+## Prompt Tips
+
+Structure prompts for best results:
+```
+[Subject] + [Action/Pose] + [Environment] + [Style] + [Quality]
+```
+
+Example:
+```
+a golden retriever puppy playing in autumn leaves, warm sunlight,
+photorealistic, shallow depth of field, shot on 35mm, 8k, masterpiece
+```
+
+Style keywords: photorealistic, digital art, oil painting, anime, watercolor, 3D render, cinematic, concept art
+
+## Troubleshooting
+
+- **No image generated / text only response**: Did not enable "制作图片" mode. Go back to Step 3.
+- **blob: image not found**: Generation not complete yet. Wait longer and retry.
+- **CDP errors / 9222 not responding**: Browser not running. Ask user to restart Brave with `--remote-debugging-port=9222`. **Do NOT auto-start or kill browser.**
+- **Login required**: Ask user to open gemini.google.com in their Brave Browser and log in.
+- **JS syntax errors with cdp_exec.py eval**: Keep JS as single-line expressions joined with semicolons. No multiline blocks.
